@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, TextInput } from "react-native";
+import { View, TextInput, Text } from "react-native";
 import Button from "./src/components/Button";
 import Task from "./src/components/Task";
 import styles from "./Global";
@@ -7,13 +7,27 @@ import styles from "./Global";
 export default function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask]= useState("");
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [filterdTasks, setFilterdTasks] = useState([]);
 
   function addNewTask(){
+    setError("");
+    if (newTask !== "") {
    setTasks([...tasks, { text: newTask, completed: false }]);
+  } else {
+    setError("Preencha a atividade");
   }
+}
+
   function toggleTask(index) {
-   const newTask =[...tasks]
-   newTask[index].completed = !newTask[index].completed 
+   const newTask =[...tasks];
+   const isTakCompleted = newTask[index].completed;
+   if (isTakCompleted) {
+    newTask[index].completed = false;
+   } else {
+    newTask[index].completed = true;
+   }
    setTasks(newTask);
 
   }
@@ -28,6 +42,16 @@ export default function App() {
    setTasks(initialTasks);
   },[]);
 
+  useEffect(() => {
+    let result = tasks;
+    if (filter === 'completed'){
+      result = tasks.filter((task) => task.completed);
+    } else if (filter == "active") {
+      result = tasks.filter((task) => !task.completed);
+    }
+    setFilterdTasks(result);
+  },[tasks, filter]);
+
   
   return <View style={styles.container}>
     <TextInput 
@@ -35,9 +59,15 @@ export default function App() {
     style={styles.input} 
     onChangeText={(text) => setNewTask(text)}
     />
-    <Button title="Adicionar" onPress={() =>addNewTask()}/>
+    {error && <Text style={{color: "red", marginBottom: 16, fontSize: 16}}>{error}</Text>}
+    <Button title="Adicionar" onPress={() => addNewTask()} />
+    <View style={styles.filterContainer}>
+      <Button title="Todas" selected={filter== "all"} onPress={() => setFilter("all")} />
+      <Button title="Concluídas" selected={filter== "completed"}onPress={() => setFilter("completed")} />
+      <Button title="Ativas" selected={filter== "active"}onPress={() => setFilter("active")} />
+    </View>
     <View style={styles.listContainer}>
-      {tasks.map((task, index) => (
+      {filterdTasks.map((task, index) => (
         <Task 
         key= {task.text}
         isChecked= {task.completed}
